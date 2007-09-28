@@ -11,11 +11,11 @@ MogileFS::Plugin::MultiHook - MogileFS plugins for using multiple hooks
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -58,10 +58,10 @@ sub load {
     Mgd::log("info", "MultiHook plugin load : begin") if ($MogileFS::Server::DEBUG);
 
     {
-        package MogileFS;
+        no strict 'refs';
         no warnings 'redefine';
 
-        sub register_global_hook {
+        *{"MogileFS::register_global_hook"} = sub {
             my ($hookname, $callback) = @_;
 
             unless (exists $MogileFS::Plugin::MultiHook::hooks{$hookname} && ref $MogileFS::Plugin::MultiHook::hooks{$hookname} eq 'ARRAY') {
@@ -70,9 +70,9 @@ sub load {
 
             push(@{$MogileFS::Plugin::MultiHook::hooks{$hookname}}, $callback);
             return 1;
-        }
+        };
 
-        sub run_global_hook {
+        *{"MogileFS::run_global_hook"} = sub {
             my ($hookname) = shift;
 
             return undef unless (exists $MogileFS::Plugin::MultiHook::hooks{$hookname} && ref $MogileFS::Plugin::MultiHook::hooks{$hookname} eq 'ARRAY');
@@ -85,16 +85,16 @@ sub load {
                 $ret = $ret && $callback->(@_) if (defined $callback && ref $callback eq 'CODE');
             }
             return $ret;
-        }
+        };
 
         ### for debug
-        sub global_hook {
+        *{"MogileFS::global_hook"} = sub {
             my ($hookname) = shift;
 
             return \%MogileFS::Plugin::MultiHook::hooks unless ($hookname);
             return undef unless (exists $MogileFS::Plugin::MultiHook::hooks{$hookname} && ref $MogileFS::Plugin::MultiHook::hooks{$hookname} eq 'ARRAY');
             return wantarray ? @{$MogileFS::Plugin::MultiHook::hooks{$hookname}} : $MogileFS::Plugin::MultiHook::hooks{$hookname};
-        }
+        };
 
         1;
     };
