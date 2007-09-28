@@ -15,4 +15,4 @@ no_index:
 requires: 
   MogileFS::Config: 0
   MogileFS::Server: 0
-version: 0.02
+version: 0.03
